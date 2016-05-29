@@ -1,3 +1,43 @@
+; ========================================================================
+; 						PANDA8086
+; PANDA8086 is a game and general purpose engine for game
+; and program development with TASM for 8086 architecture
+; processors on MS-DOS. 
+;    Copyright (C) 2016  Elian Kamal
+;
+;    This program is free software: you can redistribute it and/or modify
+;    it under the terms of the GNU General Public License as published by
+;    the Free Software Foundation, either version 3 of the License, or
+;    (at your option) any later version.
+;
+;    This program is distributed in the hope that it will be useful,
+;    but WITHOUT ANY WARRANTY; without even the implied warranty of
+;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;    GNU General Public License for more details.
+;
+;    You should have received a copy of the GNU General Public License
+;    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+; ------------------------------------------------------------------------
+; Preface:
+;		This is an engine that gives game engine integration for assembly
+;		programmers to create  games and programs for MS-DOS by using a
+;		provided sizeable programming interface/library.
+;		
+; Brief explanation:
+; 		The library/interface consists of one main core file which is this
+;		file  (PANDA.ASM)  which you should include  regardless of how you
+;		wish to use  the  library,  it contains all  the  main  procedures
+;		that are required in order for your program to behave properly.
+;		and of two other files  named  "PANDAGFX.ASM"  and  "PANDATXT.ASM" 
+;		which contain graphics procedures and text art/handling procedures 
+;		respectively.
+;		for additional  details on  the files and for a  detailed  content
+;		table refer to the mentioned files.
+;
+; Table of contents:
+;		
+; ========================================================================
+
 IDEAL
 p8086
 MODEL small
@@ -230,24 +270,24 @@ proc draw_scene
     mov cx, [PET1_Y]
     add cx, 24
     cmp cx, ax
-    jge petAbvTree1Label
+    jge @@petAbvTree1Label
     cmp cx, ax
-    jl petBlwTree1Label
+    jl @@petBlwTree1Label
     
-    petBlwTree1Label:
+    @@petBlwTree1Label:
         pop cx
         pop ax
         call draw_creature1_below_tree
         
         jmp drawSkyDetailsLabel
-    petAbvTree1Label:
+    @@petAbvTree1Label:
         pop cx
         pop ax
         call draw_creature1_above_tree
         
-        jmp drawSkyDetailsLabel
+        jmp @@drawSkyDetailsLabel
     
-    drawSkyDetailsLabel:
+    @@drawSkyDetailsLabel:
     call draw_sky_details
     ret
 endp draw_scene
@@ -290,7 +330,7 @@ endp
 
 ; checks for input in the keyboard buffer
 ; if input is available:
-;       procceed to parsing input
+;       proceed to parsing input
 ; else:
 ;       return
 public handle_input
@@ -717,8 +757,8 @@ endp
 ;                            in order to switch between different the access modes
 ; output:
 ;       [FILE_HANDLE] - the handle of the file (0 if error whilst opening the file)
-public open_file
-proc open_file
+public open_file_proc
+proc open_file_proc
     push ax
     push dx
     mov ah, [OPEN_FILE]
@@ -735,7 +775,7 @@ proc open_file
         mov ah, 9
         int 21h
     
-    @@end
+    @@end:
     pop dx
     pop ax
     ret
@@ -745,10 +785,10 @@ endp
 ; output:
 ;       [FILE_ACCESS_MODE] - FILE_ACCESS_READ
 public access_to_read
-proc access_to read
+proc access_to_read
     push ax
-    mov ax, [FILE_ACCESS_READ]
-    mov [FILE_ACCESS_MODE], ax
+    mov al, [FILE_ACCESS_READ]
+    mov [FILE_ACCESS_MODE], al
     pop ax
     ret
 endp
@@ -756,11 +796,11 @@ endp
 ; Changes FILE_ACCESS_MODE to writing
 ; output:
 ;       [FILE_ACCESS_MODE] - FILE_ACCESS_WRITE
-public access_to_read
-proc access_to read
+public access_to_write
+proc access_to_write
     push ax
-    mov ax, [FILE_ACCESS_WRITE]
-    mov [FILE_ACCESS_MODE], ax
+    mov al, [FILE_ACCESS_WRITE]
+    mov [FILE_ACCESS_MODE], al
     pop ax
     ret
 endp
@@ -768,10 +808,11 @@ endp
 ; Changes FILE_ACCESS_MODE to both read/write
 ; output:
 ;       [FILE_ACCESS_MODE] - FILE_ACCESS_BOTH
-proc access_to read
+public access_to_both
+proc access_to_both
     push ax
-    mov ax, [FILE_ACCESS_BOTH]
-    mov [FILE_ACCESS_MODE], ax
+    mov al, [FILE_ACCESS_BOTH]
+    mov [FILE_ACCESS_MODE], al
     pop ax
     ret
 endp
