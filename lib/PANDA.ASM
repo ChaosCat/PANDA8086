@@ -1,5 +1,5 @@
 ; ========================================================================
-; 						PANDA8086
+;                                	 PANDA8086
 ; PANDA8086 is a game and general purpose engine for game
 ; and program development with TASM for 8086 architecture
 ; processors on MS-DOS. 
@@ -115,7 +115,7 @@ KEY_FS db 1ch
 KEY_GS db 1dh
 KEY_RS db 1eh
 KEY_US db 1fh
-KEY_SPACE db 20h
+KEY_SPACE equ 20h
 KEY_EXCLAMATION db 21h
 KEY_QUOTE_DOUBLE db 22h
 KEY_POUND db 23h
@@ -144,17 +144,73 @@ KEY_NINE db 39h
 KEY_COLONS db 3ah
 KEY_SEMICOLON db 3bh
 KEY_LESS_THAN db 3ch
-KEY_EQUAL_SIGN db 3dh
+KEY_EQUAL_SIGN equ 3dh
 KEY_GREATER_THAN db 3eh
 KEY_QUESTION_MARK db 3fh
-KEY_W db 77h
-KEY_A db 61h
-KEY_S db 73h
-KEY_D db 64h
-KEY_CAP_W db 57h
+KEY_AT_SIGN db 40h
 KEY_CAP_A db 41h
-KEY_CAP_S db 53h
+KEY_CAP_B db 42h
+KEY_CAP_C db 43h
 KEY_CAP_D db 44h
+KEY_CAP_E db 45h
+KEY_CAP_F db 46h
+KEY_CAP_G db 47h
+KEY_CAP_H db 48h
+KEY_CAP_I db 49h
+KEY_CAP_J db 4ah
+KEY_CAP_K db 4bh
+KEY_CAP_L db 4ch
+KEY_CAP_M db 4dh
+KEY_CAP_N db 4eh
+KEY_CAP_O db 4fh
+KEY_CAP_P db 50h
+KEY_CAP_Q db 51h
+KEY_CAP_R db 52h
+KEY_CAP_S db 53h
+KEY_CAP_T db 54h
+KEY_CAP_U db 55h
+KEY_CAP_V db 56h
+KEY_CAP_W db 57h
+KEY_CAP_X db 58h
+KEY_CAP_Y db 59h
+KEY_CAP_Z db 5ah
+KEY_BRACE_SQR_L db 5bh
+KEY_SLASH_BWD db 5ch
+KEY_BRACE_SQR_R db 5dh
+KEY_ROOF_SIGN db 5eh
+KEY_UNDERSCORE db 5fh
+KEY_TICK db 60h
+KEY_A db 61h
+KEY_B db 62h
+KEY_C db 63h
+KEY_D db 64h
+KEY_E db 65h
+KEY_F db 66h
+KEY_G db 67h
+KEY_H db 68h
+KEY_I db 69h
+KEY_J db 6ah
+KEY_K db 6bh
+KEY_L db 6ch
+KEY_M db 6dh
+KEY_N db 6eh
+KEY_O db 6fh
+KEY_P db 70h
+KEY_Q db 71h
+KEY_R db 72h
+KEY_S db 73h
+KEY_T db 74h
+KEY_U db 75h
+KEY_V db 76h
+KEY_W db 77h
+KEY_X db 78h
+KEY_Y db 79h
+KEY_Z db 7ah
+KEY_BRACE_CURLY_L db 7bh
+KEY_PIPE_SIGN equ 7ch
+KEY_BRACE_CURLY_R db 7dh
+KEY_TILDE db 7eh
+KEY_DEL db 7fh
 
 ;=== OTHER ===
 TRUE equ 1
@@ -172,6 +228,8 @@ FILE_ACCESS_MODE db 0
 ;=== X & Y VALUES ===
 PXL_X dw 0
 PXL_Y dw 0
+TXT_X dw 0
+TXT_Y dw 0
 PET1_X dw 155
 PET1_Y dw 147
 SQR_X dw 0
@@ -192,6 +250,8 @@ LINE_X0 dw 0
 LINE_Y0 dw 0
 LINE_X1 dw 0
 LINE_Y1 dw 0
+
+
 
 ;=== OTHER / MULTI-PURPOSE ===
 RANDOM db 16 dup(0)
@@ -215,6 +275,7 @@ IMAGE_HEADER db 54 dup (0)
 IMAGE_PALETTE db 256*4 dup (0)
 IMAGE_LINE db 320 dup(0)
 ERROR_MSG db 'Error', 13, 10, '$'
+TXT_PTR dw 0
 
 CODESEG
 
@@ -227,7 +288,7 @@ proc run
      call handle_input
      call wait_micro
      call draw_scene
-     cmp [CLOSE_REQUESTED], 0
+     cmp [CLOSE_REQUESTED], FALSE
      jz run
      call set_text_mode
      call terminate_program
@@ -279,7 +340,7 @@ proc draw_scene
         pop ax
         call draw_creature1_below_tree
         
-        jmp drawSkyDetailsLabel
+        jmp @@drawSkyDetailsLabel
     @@petAbvTree1Label:
         pop cx
         pop ax

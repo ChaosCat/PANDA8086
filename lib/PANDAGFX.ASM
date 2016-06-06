@@ -113,9 +113,13 @@ proc read_pixel_rect
      ret
 endp
 
-public read_bmp_file
-proc read_bmp_file
-    
+public load_bmp_file
+proc load_bmp_file
+    call open_file_proc
+    call read_image_header
+    call read_image_palette
+    call image_palette_to_vm
+    call draw_image
     ret
 endp
 
@@ -132,7 +136,7 @@ proc read_image_header
     mov ah, [READ_FILE]
     mov bx, [FILE_HANDLE]
     mov cx, 54
-    mov dx, offset [IMAGE_HEADER]
+    mov dx, offset IMAGE_HEADER
     int 21h
     
     pop dx
@@ -189,7 +193,7 @@ proc image_palette_to_vm
         out dx, al
         mov al, [si]
         shr al, 2
-        mov dx, al
+        out dx, al
         add si, 4
         
         loop @@loop
