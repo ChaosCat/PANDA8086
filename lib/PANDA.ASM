@@ -279,22 +279,6 @@ TXT_PTR dw 0
 
 CODESEG
 
-; The default runtime procedure
-; should be referred to as a 
-; reference of how should the 
-; main game loop look like
-public run
-proc run
-     call handle_input
-     call wait_micro
-     call draw_scene
-     cmp [CLOSE_REQUESTED], FALSE
-     jz run
-     call set_text_mode
-     call terminate_program
-     ret
-endp
-
 ; sets the display mode to 80x25 text mode
 public set_text_mode
 proc set_text_mode
@@ -316,77 +300,6 @@ proc terminate_program
      int 21h
      pop ax
      ret
-endp
-    
-; (IGNORE) used to draw the example scene
-public draw_scene
-proc draw_scene
-    call draw_sky
-    call draw_ground
-    call draw_pond
-    push ax
-    push cx
-    mov ax, [TREE1_Y]
-    add ax, 80
-    mov cx, [PET1_Y]
-    add cx, 24
-    cmp cx, ax
-    jge @@petAbvTree1Label
-    cmp cx, ax
-    jl @@petBlwTree1Label
-    
-    @@petBlwTree1Label:
-        pop cx
-        pop ax
-        call draw_creature1_below_tree
-        
-        jmp @@drawSkyDetailsLabel
-    @@petAbvTree1Label:
-        pop cx
-        pop ax
-        call draw_creature1_above_tree
-        
-        jmp @@drawSkyDetailsLabel
-    
-    @@drawSkyDetailsLabel:
-    call draw_sky_details
-    ret
-endp draw_scene
-    
-; draws the creature above the first tree
-public draw_creature1_above_tree
-proc draw_creature1_above_tree
-    call draw_tree1
-    call draw_creature1
-    ret
-endp
-    
-; draws the creature below the first tree
-public draw_creature1_below_tree
-proc draw_creature1_below_tree
-    call draw_creature1
-    call draw_tree1
-    ret
-endp
-
-; draws the sky details (sun and clouds)
-public draw_sky_details
-proc draw_sky_details
-    call draw_sun
-    call draw_clouds
-    ret
-endp
-    
-; draws the clouds and animates them when ran through a loop
-public draw_clouds
-proc draw_clouds
-    call draw_cloud1
-    dec [CLOUD1_X]
-    call draw_cloud2
-    dec [CLOUD2_X]
-    call draw_cloud3
-    dec [CLOUD3_X]
-    ret
 endp
 
 ; checks for input in the keyboard buffer

@@ -15,38 +15,50 @@ DATASEG
 	MISSING_CLOSE_PAR_ERROR 		db	'ERROR: Missing closing parenthesis " ) " -> parameter handling.', 13, 10, '$'
 	MISSING_OPEN_BLOCK_ERROR 		db	'ERROR: Missing opening bracket " { " -> user data block.', 13, 10, '$'
 	MISSING_CLOSE_BLOCK_ERROR	db	'ERROR: Missing closing bracket " } " -> user data block.', 13, 10, '$'
-	FINISHED_PARSING_MSG			db	'FInished parsing file', '$'
+	FINISHED_PARSING_MSG			db	13, 10, 'Finished parsing file', '$'
 
-	TEMPLATE_HEAD 	db 'IDEAL', 10, 13, \
-					'MODEL small', 10, 13, \
-					'STACK 100h', 10, 13, \
-					'INCLUDE "PANDA.ASM"', 1 dup(10, 13),'$'
-	INCLUDE_GFX		db 'INCLUDE "PANDAGFX.ASM"', 10, 13, '$'
-	INCLUDE_TXT		db 'INCLUDE "PANDAGFX.ASM"', 10, 13, '$'
+	TEMPLATE_HEAD 	db 'IDEAL', 13, 10, \
+					'MODEL small', 13, 10, \
+					'STACK 100h', 13, 10, \
+					'INCLUDE "PANDA.ASM"', 1 dup(13, 10),'$'
+	TEMPLATE_HEAD_LEN equ 53
+	
+	INCLUDE_GFX		db 'INCLUDE "PANDAGFX.ASM"', 13, 10, '$'
+	INCLUDE_GFX_LEN	equ 24
+	
+	INCLUDE_TXT		db 'INCLUDE "PANDATXT.ASM"', 13, 10, '$'
+	INCLUDE_TXT_LEN	equ 24
+	
+	INCLUDE_BOTH_LEN equ 46
 					
 	TEMPLATE_BODY_1 	db 'CODESEG', 13, 10, \
 					'start:', 13, 10, \
-					'	MOV AX, @data', 13, 10, \
-					'	MOV DS, AX', 13, 10, \
-					'	XOR AX, AX', 2 dup(13, 10), \
+					'MOV AX, @data', 13, 10, \
+					'MOV DS, AX', 13, 10, \
+					'XOR AX, AX', 13, 10, \
 					'@@gameLoop:', 13, 10, \
-					'	CALL handle_input', 13, 10, '$'
+					'CALL handle_input', 13, 10, '$'
+	TEMPLATE_BODY_1_LEN equ 88
 					
-	TEMPLATE_BODY_2	db ' 	CMP [CLOSE_REQUESTED], FALSE', 13, 10, \
-					'	JE @@gameLoop', 13, 10, '$'
+	TEMPLATE_BODY_2	db 13, 10,  'CMP [CLOSE_REQUESTED], FALSE', 13, 10, \
+					'JE @@gameLoop', 13, 10, '$'
+	TEMPLATE_BODY_2_LEN equ 46
 					
 	TEMPLATE_FOOT	db 'CALL set_text_mode', 13, 10, \
 					'CALL terminate_program', 13, 10, \
-					'END start', 13, 10, '$'
+					'END start$'
+	TEMPLATE_FOOT_LEN equ 53
 					
 	FILE_HANDLE dw 0
 	NEWL db 13, 10, '$'
-	FILE_OPEN_ERROR db 'An error has occured while opening file', 13, 10, '$'
+	FILE_OPEN_ERROR db 'ERROR: An error has occured while opening file', 13, 10, '$'
+	FILE_CREATE_ERROR db 'ERROR: An error has occured while creating file', 13, 10, '$'
 	CHARACTER db 0
 	USER_CONTENT_LENGTH dw 0
-	
+	FILE_NAME_LENGTH dw 0
 	
 	FILE_NAME db 16 dup(0), 0
+	OUT_FILE_NAME db 16 dup(0), 0
 	PARAM_BUFFER db 16 dup(0)
 	FILE_BUFFER db 16000 dup(0)
 	USER_CONTENT_BUFFER db 16000 dup(0)
@@ -59,9 +71,16 @@ start:
 	
 	call load_parameters
 	call parse_first_param
+	
 	call open_file_read
 	call read_file
 	call parse_file
+	call close_file
+	
+	call set_output_file_name
+	call create_output_file
+	call open_output_file_write
+	call write_output_to_file
 	call close_file
 	
 	mov ax, 4c00h
@@ -89,6 +108,7 @@ proc parse_first_param
 	je @@skip
 	mov [FILE_NAME + si], al
 	inc si
+	inc [FILE_NAME_LENGTH]
 	loop @@loop
 
 @@skip:
@@ -165,6 +185,7 @@ proc parse_file
 	cmp al, '}'
 	je @@contentEnd
 	mov [USER_CONTENT_BUFFER + di], al
+	inc [USER_CONTENT_LENGTH]
 	jmp @@contentLoop
 @@contentEnd:
 
@@ -221,6 +242,109 @@ jmp @@skip_error5
 	ret
 endp
 
+proc set_output_file_name
+	push ax
+	push cx
+	push si
+	
+	xor si, si
+	mov cx, [FILE_NAME_LENGTH]
+	sub cx, 4
+@@loop:
+	mov al, [FILE_NAME + si]
+	mov [OUT_FILE_NAME + si], al
+	inc si
+	loop @@loop
+	
+	mov al, '.'
+	mov [OUT_FILE_NAME + si], al
+	
+	inc si
+	mov al, 'A'
+	mov [OUT_FILE_NAME + si], al
+	
+	inc si
+	mov al, 'S'
+	mov [OUT_FILE_NAME + si], al
+	
+	inc si
+	mov al, 'M'
+	mov [OUT_FILE_NAME + si], al
+	
+	pop si
+	pop ax
+	pop cx
+	ret
+endp
+
+proc write_output_to_file
+	push ax
+	push bx
+	push cx
+	push dx
+	
+	mov ah, 40h
+	mov bx, [FILE_HANDLE] 
+	mov cx, TEMPLATE_HEAD_LEN
+	mov dx, offset TEMPLATE_HEAD
+	int 21h
+	
+	cmp [FILE_TYPE_BUFFER], 'g'
+	je @@addGFXInclude
+	
+	cmp [FILE_TYPE_BUFFER], 't'
+	je @@addTXTInclude
+	
+	jmp @@includeSectionEnd
+@@addGFXInclude:
+	mov ah, 40h
+	mov bx, [FILE_HANDLE] 
+	mov cx, INCLUDE_GFX_LEN
+	mov dx, offset INCLUDE_GFX
+	int 21h
+	jmp @@includeSectionEnd
+	
+@@addTXTInclude:
+	mov ah, 40h
+	mov bx, [FILE_HANDLE] 
+	mov cx, INCLUDE_TXT_LEN
+	mov dx, offset INCLUDE_TXT
+	int 21h
+	jmp @@includeSectionEnd
+
+@@includeSectionEnd:
+
+	mov ah, 40h
+	mov bx, [FILE_HANDLE]
+	mov cx, TEMPLATE_BODY_1_LEN
+	mov dx, offset TEMPLATE_BODY_1
+	int 21h
+	
+	mov ah, 40h
+	mov bx, [FILE_HANDLE]
+	mov cx, [USER_CONTENT_LENGTH]
+	mov dx, offset USER_CONTENT_BUFFER
+	int 21h
+	
+	mov ah, 40h
+	mov bx, [FILE_HANDLE]
+	mov cx, TEMPLATE_BODY_2_LEN
+	mov dx, offset TEMPLATE_BODY_2
+	int 21h
+	
+	mov ah, 40h
+	mov bx, [FILE_HANDLE]
+	mov cx, TEMPLATE_FOOT_LEN
+	mov dx, offset TEMPLATE_FOOT
+	int 21h
+	
+	pop dx
+	pop cx
+	pop bx
+	pop ax
+	ret
+endp
+
 ; === OTHER ===
 
 proc load_parameters
@@ -257,7 +381,7 @@ proc open_file_read
     jmp @@end
     
     @@openError:
-        mov dx, offset FILE_OPEN_ERROR
+	mov dx, offset FILE_OPEN_ERROR
         mov ah, 9
         int 21h
     
@@ -265,6 +389,52 @@ proc open_file_read
     pop dx
     pop ax
     ret
+endp
+
+proc open_output_file_write
+	push ax
+	push dx
+	
+	mov ah, 3dh
+	mov al, 1
+	mov dx, offset OUT_FILE_NAME
+
+	jc @@openError
+	jmp @@end
+	@@openError:
+		mov dx, offset FILE_OPEN_ERROR
+		mov ah, 9
+		int 21h
+    
+	@@end:
+	pop dx
+	pop ax
+	ret
+endp
+
+proc create_output_file
+	push ax
+	push cx
+	push dx
+	
+	mov ah, 3ch
+	mov cx, 0
+	mov dx, offset OUT_FILE_NAME
+	int 21h
+	jc @@createError
+	mov [FILE_HANDLE], ax
+	jmp @@end
+	
+@@createError:
+	mov dx, offset FILE_CREATE_ERROR
+	mov ah, 9
+	int 21h
+	
+@@end:
+	pop dx
+	pop cx
+	pop ax
+	ret
 endp
 
 proc read_file
@@ -299,6 +469,10 @@ proc close_file
 	ret
 endp
 
+; Performs a series of checks (in ASCII ranges) to verify the validity of a character as:
+;	A) A dot (.)
+;	B) A number (0-9)
+;	C) A letter (a-z/ A-Z)
 proc validate_char
 	push ax
 	mov al , [CHARACTER]
@@ -317,12 +491,13 @@ proc validate_char
 	cmp al, 7ah
 	jg @@fail
 	
+; dot case
 @@check1:
 	cmp al, 2eh
 	je @@skip_fail
 	cmp al, 2eh
 	jne @@fail
-
+	
 @@check2:
 	cmp al, 41h
 	jge @@continue2
@@ -383,4 +558,3 @@ proc print_example
 endp
 
 END start
-
