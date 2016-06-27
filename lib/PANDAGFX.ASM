@@ -65,12 +65,21 @@ endp
 ; parameters:
 ;       [PXL_X] - pixel column (range: 0 - 320)
 ;       [PXL_Y] - pixel row (range: 0 - 200)
+; output:
+;	[COLOR] - pixel color at given position
 public read_pixel
 proc read_pixel
+     push ax
+     push cx
+     push dx
      mov ah, [READ_PIXEL_CONST]
      mov cx, [PXL_X]
      mov dx, [PXL_Y]
      int 10h
+     mov [COLOR], al
+     pop dx
+     pop cx
+     pop ax
      ret
 endp
 
@@ -509,7 +518,7 @@ proc draw_square
             inc [PXL_X]
             dec [COUNTER]
             cmp [COUNTER], 0
-            jge loopDSX
+            jg loopDSX
         pop [COUNTER]
         pop [PXL_X]
         
@@ -529,7 +538,8 @@ endp
 ; parameters:
 ;       [PXL_X] - rectangle start column position (range: 0 - 320)
 ;       [PXL_Y] - rectangle start row position (range: 0 - 200)
-;       [SQR_SIZE] - size of the rectangle
+;       [RCT_H] - height of the rectangle
+;	[RCT_W] - width of the rectangle
 ;       [COLOR] - color of the rectangle
 public draw_rect
 proc draw_rect
@@ -685,7 +695,10 @@ proc draw_creature1
      ;===DRAWS BODY (BLUE PARTS)===
      ;ears
      add [PXL_X], 6
-     call color_to_light_blue
+     push ax
+     mov al, [PET_COLOR]
+     mov [COLOR], al
+     pop ax
      call write_qpixel
      add [PXL_X], 2
      call write_qpixel

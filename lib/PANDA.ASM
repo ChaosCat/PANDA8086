@@ -17,7 +17,7 @@
 ;
 ;    You should have received a copy of the GNU General Public License
 ;    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-; ------------------------------------------------------------------------
+; ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ; Preface:
 ;		This is an engine that gives game engine integration for assembly
 ;		programmers to create  games and programs for MS-DOS by using a
@@ -33,8 +33,6 @@
 ;		respectively.
 ;		for additional  details on  the files and for a  detailed  content
 ;		table refer to the mentioned files.
-;
-; Table of contents:
 ;		
 ; ========================================================================
 
@@ -64,23 +62,41 @@ CLOSE_FILE db 3eh
 COLOR db 0
 BG_COLOR db 0
 GROUND_COLOR db 0
+PET_COLOR db 4 	; Default color red (no real reason it just shouldn't be black)
 
-COLOR_BLACK db 0000b
-COLOR_BLUE db 0001b
-COLOR_GREEN db 0010b
-COLOR_CYAN db 0011b
-COLOR_RED db 0100b
-COLOR_MAGENTA db 0101b
-COLOR_BROWN db 0110b
-COLOR_LIGHT_GRAY db 0111b
-COLOR_DARK_GRAY db 1000b
-COLOR_LIGHT_BLUE db 1001b
-COLOR_LIGHT_GREEN db 1010b
-COLOR_LIGHT_CYAN db 1011b
-COLOR_LIGHT_RED db 1100b
-COLOR_LIGHT_MAGENTA db 1101b
-COLOR_YELLOW db 1110b
-COLOR_WHITE db 1111b
+COLOR_BLACK 					db 0000b
+COLOR_BLUE 					db 0001b
+COLOR_GREEN 					db 0010b
+COLOR_CYAN 					db 0011b
+COLOR_RED 					db 0100b
+COLOR_MAGENTA 				db 0101b
+COLOR_BROWN 				db 0110b
+COLOR_LIGHT_GRAY 				db 0111b
+COLOR_DARK_GRAY 				db 1000b
+COLOR_LIGHT_BLUE 				db 1001b
+COLOR_LIGHT_GREEN 			db 1010b
+COLOR_LIGHT_CYAN 				db 1011b
+COLOR_LIGHT_RED 				db 1100b
+COLOR_LIGHT_MAGENTA 			db 1101b
+COLOR_YELLOW 				db 1110b
+COLOR_WHITE 					db 1111b
+
+COLOR_BLACK_CONST 			equ 0000b
+COLOR_BLUE_CONST 			equ 0001b
+COLOR_GREEN_CONST 			equ 0010b
+COLOR_CYAN_CONST 			equ 0011b
+COLOR_RED_CONST 				equ 0100b
+COLOR_MAGENTA_CONST 			equ 0101b
+COLOR_BROWN_CONST 			equ 0110b
+COLOR_LIGHT_GRAY_CONST 		equ 0111b
+COLOR_DARK_GRAY_CONST 		equ 1000b
+COLOR_LIGHT_BLUE_CONST 		equ 1001b
+COLOR_LIGHT_GREEN_CONST 		equ 1010b
+COLOR_LIGHT_CYAN_CONST 		equ 1011b
+COLOR_LIGHT_RED_CONST 		equ 1100b
+COLOR_LIGHT_MAGENTA_CONST 	equ 1101b
+COLOR_YELLOW_CONST 			equ 1110b
+COLOR_WHITE_CONST			equ 1111b
 
 ;===ASCII CODES===
 KEY_NUL  db 00h
